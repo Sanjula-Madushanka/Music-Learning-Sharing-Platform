@@ -127,7 +127,7 @@ const MusicFeed = () => {
     localStorage.setItem('musicAppFavorites', JSON.stringify(Array.from(newFavorites)));
   };
 
-  // Player controls
+  // Player controls 
   const handlePlay = (index) => {
     setCurrentTrackIndex(index);
     setIsPlaying(true);
@@ -201,7 +201,7 @@ const MusicFeed = () => {
     setRepeat(!repeat);
   };
 
-  // Update progress
+  // Update progress and duration
   useEffect(() => {
     const interval = setInterval(() => {
       if (audioRef.current && !isNaN(audioRef.current.duration)) {
@@ -213,7 +213,7 @@ const MusicFeed = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Handle track ended
+  // Handle track ended event
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
