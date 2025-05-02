@@ -25,14 +25,18 @@ public class Music {
     private String filePath;
     private int likesCount = 0;
     
+    @Column(nullable = false)
+    private boolean isApproved = false; // Add is_approved field with default
+    
     @OneToMany(mappedBy = "music", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
     
     public Music() {}
     
-    public Music(String title, String artist, String genre) {
+    public Music(String title, String artist, String genre, boolean isApproved) {
         this.title = title;
         this.artist = artist;
         this.genre = genre;
+        this.isApproved = isApproved;
     }
 }
