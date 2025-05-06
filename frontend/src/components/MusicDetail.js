@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FiHeart, FiUser, FiMessageSquare, FiSend, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(relativeTime);
 
 const MusicDetail = () => {
   const { id } = useParams();
@@ -18,6 +22,8 @@ const MusicDetail = () => {
     genre: '',
   });
   const [error, setError] = useState(null);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editingContent, setEditingContent] = useState('');
 
   // Fetch pseudo user id
   const userId = localStorage.getItem('userId') || 'CurrentUser';
@@ -29,6 +35,8 @@ const MusicDetail = () => {
         setLoading(true);
         setError(null);
         const response = await axios.get(`http://localhost:8080/api/music/${id}`);
+        const commentsResponse = await axios.get(`http://localhost:8080/api/music/${id}/comments`);
+        response.data.comments = commentsResponse.data;
         setMusic(response.data);
         setEditData({
           title: response.data.title,
@@ -80,11 +88,13 @@ const MusicDetail = () => {
       return;
     }
     try {
-      const newComment = { content: trimmedComment, author: userId, id: Date.now() };
-      await axios.post(`http://localhost:8080/api/music/${id}/comments`, newComment);
-      setMusic(prev => ({
+      const response = await axios.post(
+        `http://localhost:8080/api/music/${id}/comments`,
+        { content: trimmedComment, author: userId }
+      );
+      setMusic((prev) => ({
         ...prev,
-        comments: [...prev.comments, newComment],
+        comments: [...prev.comments, response.data],
       }));
       setComment('');
       setError(null);
@@ -93,6 +103,41 @@ const MusicDetail = () => {
       setError('Failed to submit comment. Please try again.');
     }
   };
+
+  const startEditing = (comment) => {
+    setEditingCommentId(comment.id);
+    setEditingContent(comment.content);
+  };
+
+  const handleUpdateComment = async (e, commentId) => {
+    e.preventDefault();
+    try {
+      await axios.put(`http://localhost:8080/api/music/${id}/comments/${commentId}`, {
+        content: editingContent,
+        author: userId,
+      });
+      const updated = await axios.get(`http://localhost:8080/api/music/${id}/comments`);
+      setMusic((prev) => ({ ...prev, comments: updated.data }));
+      setEditingCommentId(null);
+    } catch (err) {
+      console.error('Update failed', err);
+      setError('Failed to update comment. Please try again.');
+    }
+  };
+  const deleteComment = async (commentId) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this comment?");
+    if (!confirmDelete) return;
+  
+    try {
+      await axios.delete(`http://localhost:8080/api/music/${id}/comments/${commentId}`);
+      const updated = await axios.get(`http://localhost:8080/api/music/${id}/comments`);
+      setMusic((prev) => ({ ...prev, comments: updated.data }));
+    } catch (err) {
+      console.error('Delete failed', err);
+      setError('Failed to delete comment. Please try again.');
+    }
+  };
+  
 
   const togglePlay = () => {
     if (music?.filePath) {
@@ -134,7 +179,7 @@ const MusicDetail = () => {
     const { name, value } = e.target;
     setEditData(prev => ({
       ...prev,
-      [name]: value.trimStart(), // Prevent leading spaces
+      [name]: value.trimStart(),
     }));
   };
 
@@ -159,8 +204,6 @@ const MusicDetail = () => {
       setMusic(response.data);
       setIsEditing(false);
       setError(null);
-      // Optional: Add toast notification (e.g., react-toastify)
-      // toast.success('Track updated successfully!');
     } catch (error) {
       console.error('Error updating music:', error);
       setError('Failed to update the track. Please try again.');
@@ -179,184 +222,90 @@ const MusicDetail = () => {
   if (!music) return <div className="text-center py-10">Music not found</div>;
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-100 text-red-700 p-4 mx-6 mt-4 rounded-lg" role="alert">
-            {error}
-          </div>
-        )}
+    <div className="border-t border-gray-700 pt-6">
+  <div className="flex items-center justify-between px-6 py-3 rounded-t-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
+    <h2 className="text-white font-semibold text-base">Discussion</h2>
+    <FiHeart className="text-pink-200" />
+  </div>
 
-        {/* Music Header */}
-        <div className="p-6 bg-gradient-to-r from-primary to-secondary">
-          <div className="flex items-center justify-between">
-            <div>
-              {isEditing ? (
-                <input
-                  type="text"
-                  name="title"
-                  value={editData.title}
-                  onChange={handleEditChange}
-                  className="text-2xl font-bold bg-white/90 px-2 py-1 rounded mb-1 w-full"
-                  aria-label="Edit music title"
-                  maxLength={100}
-                  required
-                />
-              ) : (
-                <h1 className="text-2xl font-bold text-white">{music.title}</h1>
-              )}
-              {isEditing ? (
-                <input
-                  type="text"
-                  name="artist"
-                  value={editData.artist}
-                  onChange={handleEditChange}
-                  className="bg-white/90 px-2 py-1 rounded text-sm w-full"
-                  aria-label="Edit artist name"
-                  maxLength={100}
-                  required
-                />
-              ) : (
-                <p className="text-white/90">{music.artist}</p>
-              )}
-            </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={handleLike}
-                className="flex items-center space-x-1 px-4 py-2 bg-white/20 rounded-full text-white hover:bg-white/30 transition-colors"
-                aria-label={`Like track (${music.likesCount} likes)`}
-              >
-                <FiHeart className={music.likesCount > 0 ? 'fill-current text-red-500' : ''} />
-                <span>{music.likesCount}</span>
-              </button>
-              <button
-                onClick={handleEditToggle}
-                className="p-2 bg-white/20 rounded-full text-white hover:bg-white/30 transition-colors"
-                aria-label="Edit track details"
-                title="Edit"
-              >
-                <FiEdit2 />
-              </button>
-              <button
-                onClick={handleDelete}
-                className="p-2 bg-white/20 rounded-full text-white hover:bg-white/30 transition-colors"
-                aria-label="Delete track"
-                title="Delete"
-              >
-                <FiTrash2 />
-              </button>
-            </div>
-          </div>
-        </div>
+  <form onSubmit={handleCommentSubmit} className="flex items-center gap-3 mb-4 px-6 mt-4">
+    <img
+      src={`https://api.dicebear.com/7.x/initials/svg?seed=${userId}`}
+      className="w-10 h-10 rounded-full"
+      alt="avatar"
+    />
+    <input
+      type="text"
+      value={comment}
+      onChange={(e) => setComment(e.target.value)}
+      placeholder="Write your comment..."
+      className="flex-1 px-4 py-2 rounded-full border border-gray-300 bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      maxLength={500}
+    />
+    <button
+      type="submit"
+      className="p-2 rounded-full bg-indigo-600 text-white hover:bg-indigo-700"
+      aria-label="Submit comment"
+    >
+      <FiSend size={16} />
+    </button>
+  </form>
 
-        {/* Music Content */}
-        <div className="p-6">
-          <div className="flex items-center mb-4">
-            {isEditing ? (
-              <input
-                type="text"
-                name="genre"
-                value={editData.genre}
-                onChange={handleEditChange}
-                className="bg-secondary/10 text-secondary text-sm px-3 py-1 rounded-full border border-secondary/30"
-                aria-label="Edit genre"
-                maxLength={50}
-                required
-              />
-            ) : (
-              <span className="bg-secondary/10 text-secondary text-sm px-3 py-1 rounded-full">
-                {music.genre}
-              </span>
-            )}
-          </div>
-
-          {isEditing && (
-            <div className="mb-4 flex justify-end">
-              <button
-                onClick={handleEditSubmit}
-                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors mr-2"
-                aria-label="Save changes"
-              >
-                Save Changes
-              </button>
-              <button
-                onClick={handleEditToggle}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
-                aria-label="Cancel editing"
-              >
-                Cancel
-              </button>
-            </div>
-          )}
-
-          {/* Audio Player */}
-          <div className="mb-8">
-            <div
-              onClick={togglePlay}
-              onKeyDown={(e) => e.key === 'Enter' && togglePlay()}
-              role="button"
-              aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
-              tabIndex={0}
-              className="flex items-center justify-center w-16 h-16 mx-auto bg-primary rounded-full cursor-pointer hover:bg-primary/90 transition-colors"
-            >
-              {isPlaying ? (
-                <div className="w-6 h-6 bg-white" aria-hidden="true"></div>
-              ) : (
-                <div
-                  className="w-0 h-0 border-t-8 border-b-8 border-l-16 border-t-transparent border-b-transparent border-l-white ml-1"
-                  aria-hidden="true"
-                ></div>
-              )}
-            </div>
-          </div>
-
-          {/* Comments Section */}
-          <div className="border-t pt-6">
-            <h3 className="flex items-center text-lg font-semibold mb-4">
-              <FiMessageSquare className="mr-2" />
-              Comments
-            </h3>
-
-            {music.comments.length > 0 ? (
-              <div className="space-y-4 mb-6">
-                {music.comments.map(c => (
-                  <div key={c.id} className="bg-gray-50 p-4 rounded-lg">
-                    <div className="flex items-center mb-2">
-                      <FiUser className="text-gray-500 mr-2" />
-                      <span className="font-medium text-gray-700">{c.author}</span>
-                    </div>
-                    <p className="text-gray-600">{c.content}</p>
-                  </div>
-                ))}
+  <div className="space-y-4 px-6 pb-6">
+    {music.comments.length > 0 ? (
+      music.comments.map((c) => (
+        <div key={c.id} className="bg-white p-4 rounded-lg shadow flex space-x-4">
+          <img
+            src={`https://api.dicebear.com/7.x/initials/svg?seed=${c.author}`}
+            alt="avatar"
+            className="w-10 h-10 rounded-full"
+          />
+          <div className="flex-1 text-sm text-gray-800">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="font-semibold text-base">{c.author}</span>
+                <span className="bg-green-100 text-green-600 text-xs font-medium px-2 py-0.5 rounded-full">Top Comment</span>
               </div>
+              <span className="text-xs text-gray-500">
+                {dayjs(c.createdAt).fromNow()}
+              </span>
+            </div>
+            {editingCommentId === c.id ? (
+              <form onSubmit={(e) => handleUpdateComment(e, c.id)} className="mt-2">
+                <textarea
+                  value={editingContent}
+                  onChange={(e) => setEditingContent(e.target.value)}
+                  className="w-full p-2 border rounded text-sm text-gray-800"
+                  rows={2}
+                />
+                <div className="mt-2 flex gap-2">
+                  <button type="submit" className="text-sm text-white bg-indigo-600 px-3 py-1 rounded">Save</button>
+                  <button type="button" className="text-sm text-gray-600" onClick={() => setEditingCommentId(null)}>Cancel</button>
+                </div>
+              </form>
             ) : (
-              <p className="text-gray-500 text-center py-4">No comments yet</p>
+              <p className="mt-2 text-gray-700 text-sm leading-relaxed">{c.content}</p>
             )}
-
-            <form onSubmit={handleCommentSubmit} className="flex items-center">
-              <input
-                type="text"
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="Add a comment..."
-                className="flex-1 px-4 py-2 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                aria-label="Comment input"
-                maxLength={500}
-                required
-              />
-              <button
-                type="submit"
-                className="px-4 py-2 bg-primary text-white rounded-r-lg hover:bg-primary/90 transition-colors"
-                aria-label="Submit comment"
-              >
-                <FiSend />
+            <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
+              <div className="flex items-center gap-1 text-emerald-600">
+                <FiHeart className="text-sm" /> <span>24</span>
+              </div>
+              <button onClick={() => startEditing(c)} className="flex items-center gap-1 hover:text-blue-600">
+                <FiEdit2 className="text-sm" /> Edit
               </button>
-            </form>
+              <button onClick={() => deleteComment(c.id)} className="flex items-center gap-1 hover:text-red-600">
+                <FiTrash2 className="text-sm" /> Delete
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      ))
+    ) : (
+      <p className="text-gray-500 text-center py-4">No comments yet</p>
+    )}
+  </div>
+</div>
+
   );
 };
 
