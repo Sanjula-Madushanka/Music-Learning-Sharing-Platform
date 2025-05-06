@@ -81,9 +81,7 @@ This is a full-stack web application developed for the **"Programming Applicatio
 - **Frontend:** React.js  
 - **Backend:** Spring Boot (Java)  
 - **Authentication:** OAuth 2.0 (Google, Facebook)  
-- **Database:** MySQL / PostgreSQL (TBD)  
-- **Real-time Features:** WebSockets for notifications  
-- **Deployment:** TBD (Render / Vercel / Railway / Heroku)
+- **Database:** MySQL   
 
 ---
 
@@ -117,7 +115,7 @@ This project is developed for educational purposes under the IT3030 module. All 
 
 **Group ID:** WD-25  
 **Module:** Programming Applications and Frameworks (IT3030)  
-**Semester:** 2024 - Semester 1  
+**Semester:** 2025 - Semester 1  
 
 ---
 
