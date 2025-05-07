@@ -12,28 +12,47 @@ export default function UsersList() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    setLoading(true)
-    api
-      .get("/users")
-      .then((res) => {
+    const fetchUsers = async () => {
+      setLoading(true)
+      try {
+        console.log("Making API request to:", api.defaults.baseURL + "/users")
+        const res = await api.get("/users")
+        console.log("API Response:", res)
+
         if (Array.isArray(res.data)) {
           setUsers(res.data)
           setFilteredUsers(res.data)
+          console.log("Successfully fetched users:", res.data)
         } else {
           console.error("Expected array but got:", res.data)
-          setError("Failed to load users data")
+          setError("Failed to load users data: Unexpected response format")
           setUsers([])
           setFilteredUsers([])
         }
-        setLoading(false)
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error("Failed to fetch users", err)
-        setError("Failed to fetch users")
+        console.error("Error details:", err.response ? err.response.data : "No response data")
+
+        let errorMessage = "Failed to fetch users"
+        if (err.code === "ERR_NETWORK") {
+          errorMessage =
+            "Cannot connect to the server. Please make sure the backend is running at http://localhost:9090"
+        } else if (err.response) {
+          errorMessage = `Server error: ${err.response.status} ${err.response.statusText}`
+          if (err.response.data && err.response.data.error) {
+            errorMessage += ` - ${err.response.data.error}`
+          }
+        }
+
+        setError(errorMessage)
         setUsers([])
         setFilteredUsers([])
+      } finally {
         setLoading(false)
-      })
+      }
+    }
+
+    fetchUsers()
   }, [])
 
   useEffect(() => {
@@ -92,12 +111,12 @@ export default function UsersList() {
             >
               {u.profilePictureUrl ? (
                 <img
-                  src={u.profilePictureUrl || "/placeholder.svg"}
+                  src={u.profilePictureUrl || "/placeholder.svg?height=80&width=80"}
                   alt="Profile"
                   className="w-20 h-20 rounded-full object-cover border-4 border-purple-500"
                   onError={(e) => {
                     e.target.onerror = null
-                    e.target.src = "/placeholder.svg"
+                    e.target.src = "/placeholder.svg?height=80&width=80"
                   }}
                 />
               ) : (
