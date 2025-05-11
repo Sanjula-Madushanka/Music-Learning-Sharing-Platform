@@ -1,49 +1,40 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { api } from "../api"
+import { useNavigate, Link } from "react-router-dom"
+import UserPosts from "../components/UserPosts"
 
 const UserProfile = () => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      const email = localStorage.getItem("userEmail")
-      if (!email) {
-        setLoading(false)
-        setError("No user email found. Please log in again.")
-        return
-      }
-
-      try {
-        console.log(`Fetching user data for email: ${email}`)
-        const response = await api.get(`/users/email/${email}`)
-        console.log("User data response:", response.data)
-
-        if (response.data) {
-          setUser(response.data)
-          if (response.data.id) {
-            localStorage.setItem("userId", response.data.id)
-          }
-        } else {
-          setError("No user data returned from server")
-        }
-      } catch (err) {
-        console.error("Failed to fetch user", err)
-        setError(`Error fetching user data: ${err.message}`)
-        if (err.response && err.response.data && err.response.data.error) {
-          setError(`${err.response.data.error}`)
-        }
-      } finally {
-        setLoading(false)
-      }
+    const email = localStorage.getItem("userEmail")
+    if (!email) {
+      setLoading(false)
+      return
     }
 
-    fetchUserData()
+    fetch(`http://localhost:9090/api/v1/users/email/${email}`, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setUser(data)
+        if (data && data.id) {
+          localStorage.setItem("userId", data.id)
+        }
+        setLoading(false)
+      })
+      .catch((err) => {
+        console.error("Failed to fetch user", err)
+        setLoading(false)
+      })
   }, [])
 
   if (loading) {
@@ -62,29 +53,12 @@ const UserProfile = () => {
     )
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-white">
-        <div className="text-center p-8 bg-white rounded-xl shadow-lg border border-purple-100">
-          <h2 className="text-2xl font-bold text-purple-700">Error</h2>
-          <p className="mt-2 text-gray-600">{error}</p>
-          <button onClick={() => navigate("/login")} className="mt-4 px-4 py-2 bg-purple-500 text-white rounded-full">
-            Back to Login
-          </button>
-        </div>
-      </div>
-    )
-  }
-
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-white">
         <div className="text-center p-8 bg-white rounded-xl shadow-lg border border-purple-100">
           <h2 className="text-2xl font-bold text-purple-700">User Not Found</h2>
           <p className="mt-2 text-gray-600">Please log in to view your profile</p>
-          <button onClick={() => navigate("/login")} className="mt-4 px-4 py-2 bg-purple-500 text-white rounded-full">
-            Go to Login
-          </button>
         </div>
       </div>
     )
@@ -100,11 +74,6 @@ const UserProfile = () => {
                 src={user.profilePictureUrl || "/placeholder.svg"}
                 alt={`${user.firstName}'s profile`}
                 className="w-full h-full object-cover rounded-full"
-                referrerPolicy="no-referrer"
-                onError={(e) => {
-                  e.target.onerror = null
-                  e.target.src = "/placeholder.svg?height=150&width=150"
-                }}
               />
             ) : (
               <div className="w-full h-full rounded-full bg-purple-200 flex items-center justify-center">
@@ -201,6 +170,22 @@ const UserProfile = () => {
               Edit Profile
             </button>
           </div>
+        </div>
+        {/* User Posts Section */}
+        <div className="mt-10 w-full max-w-3xl">
+          <h3 className="text-2xl font-bold text-gray-800 mb-6">My Posts</h3>
+
+          <div className="flex justify-between items-center mb-6">
+            <p className="text-purple-600">Share your music journey</p>
+            <Link
+              to="/create-post"
+              className="px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full text-white font-medium hover:from-purple-600 hover:to-purple-700 transition-all duration-300 hover:scale-105"
+            >
+              Create Post
+            </Link>
+          </div>
+
+          <UserPosts userId={user.id} />
         </div>
       </div>
     </div>
