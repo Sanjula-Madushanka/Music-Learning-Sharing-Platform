@@ -2,14 +2,15 @@ package com.treble.treble.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 
 @Configuration
@@ -22,17 +23,23 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())  // Disable CSRF for REST APIs
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        // Allow access to static resources
+                        // Allow access to static resources and API endpoints
                         .requestMatchers(
-                                new AntPathRequestMatcher("/uploads/**"),
-                                new AntPathRequestMatcher("/h2-console/**")
-                        ).permitAll()
-                        // Allow access to API endpoints for development
-                        .requestMatchers(
-                                new AntPathRequestMatcher("/api/**")
+                                "/uploads/**",
+                                "/h2-console/**",
+                                "/api/**",
+                                "/api/v1/**",
+                                "/oauth2/**",
+                                "/login/**",
+                                "/oauth2/authorization/**",
+                                "/login/oauth2/code/**"
                         ).permitAll()
                         // Require authentication for all other requests
                         .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .defaultSuccessUrl("/api/v1/users/oauth-success", true)
+                        .failureUrl("/login?error=true")
                 )
                 // Allow frames for H2 console
                 .headers(headers -> headers.frameOptions().sameOrigin());
@@ -43,7 +50,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*"));  // Allow all origins for development
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
