@@ -57,8 +57,9 @@ const CommentItem = ({ comment, currentUserId, onDelete, onUpdate }) => {
     }
   }
 
+  // Update the styling of the comment item to match the new design:
   return (
-    <div className="bg-white/5 rounded-lg p-3 transition-all duration-300 hover:bg-white/10">
+    <div className="bg-gray-700/30 rounded-lg p-3 transition-all duration-300 hover:bg-gray-700/50">
       <div className="flex items-start space-x-3">
         {/* User Avatar */}
         <div className="flex-shrink-0">
@@ -69,8 +70,8 @@ const CommentItem = ({ comment, currentUserId, onDelete, onUpdate }) => {
               className="w-8 h-8 rounded-full object-cover border border-purple-500/30"
             />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-purple-200 flex items-center justify-center border border-purple-500/30">
-              <span className="text-sm font-bold text-purple-600">{comment.user?.firstName?.charAt(0) || "U"}</span>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 flex items-center justify-center border border-purple-500/30">
+              <span className="text-sm font-bold text-white">{comment.user?.firstName?.charAt(0) || "U"}</span>
             </div>
           )}
         </div>
@@ -89,7 +90,7 @@ const CommentItem = ({ comment, currentUserId, onDelete, onUpdate }) => {
               <textarea
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-purple-500/30 rounded-lg text-white placeholder-purple-200/50 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-sm resize-none"
+                className="w-full px-3 py-2 bg-gray-800/50 border border-purple-500/30 rounded-lg text-white placeholder-purple-200/50 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-sm resize-none"
                 rows={2}
                 maxLength={1000}
               />

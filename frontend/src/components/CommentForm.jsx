@@ -41,7 +41,7 @@ const CommentForm = ({ postId, userId, onCommentAdded }) => {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Add a comment..."
-          className="w-full px-3 py-2 bg-white/5 border border-purple-500/30 rounded-lg text-white placeholder-purple-200/50 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-sm resize-none"
+          className="w-full px-3 py-2 bg-gray-800/50 border border-purple-500/30 rounded-lg text-white placeholder-purple-300/70 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-sm resize-none"
           rows={1}
           maxLength={1000}
         />
@@ -52,7 +52,7 @@ const CommentForm = ({ postId, userId, onCommentAdded }) => {
         className={`px-4 py-2 rounded-lg text-sm font-medium ${
           submitting || !content.trim()
             ? "bg-purple-500/30 text-purple-200/50 cursor-not-allowed"
-            : "bg-purple-500 text-white hover:bg-purple-600 transition-colors"
+            : "bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 transition-all duration-300"
         }`}
       >
         {submitting ? "Posting..." : "Post"}
