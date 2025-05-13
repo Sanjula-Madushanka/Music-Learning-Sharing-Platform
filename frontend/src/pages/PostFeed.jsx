@@ -6,6 +6,7 @@ import { api } from "../api"
 import toast from "react-hot-toast"
 import CommentSection from "../components/CommentSection"
 import LikeButton from "../components/LikeButton"
+import ImageCarousel from "../components/ImageCarousel"
 
 const PostFeed = () => {
   const [posts, setPosts] = useState([])
@@ -69,20 +70,16 @@ const PostFeed = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="max-w-4xl mx-auto p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-white">Music Feed</h1>
-          <Link
-            to="/create-post"
-            className="px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full text-white font-medium hover:from-purple-600 hover:to-purple-700 transition-all duration-300 hover:scale-105"
-          >
-            Create Post
-          </Link>
+          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+            Music Feed
+          </h1>
         </div>
 
         {posts.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center py-12 bg-gray-800/30 backdrop-blur-sm rounded-3xl border border-purple-500/10 shadow-xl">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-16 w-16 mx-auto text-purple-500/50 mb-4"
@@ -105,34 +102,28 @@ const PostFeed = () => {
             {posts.map((post) => (
               <div
                 key={post.id}
-                className="bg-black/60 backdrop-blur-xl rounded-3xl border border-purple-500/20 shadow-[0_0_30px_rgba(236,72,153,0.1)] overflow-hidden"
+                className="bg-gray-800/30 backdrop-blur-sm rounded-3xl border border-purple-500/10 shadow-xl overflow-hidden transform transition-all duration-300 hover:shadow-purple-500/10 hover:border-purple-500/20 hover:-translate-y-1"
               >
                 {/* Post Header */}
                 <div className="flex items-center p-4 border-b border-purple-500/10">
-                  <Link to={`/profile/${post.userId}`} className="flex items-center">
-                    {post.user?.profilePictureUrl ? (
-                      <img
-                        src={post.user.profilePictureUrl || "/placeholder.svg"}
-                        alt={`${post.user.firstName}'s profile`}
-                        className="w-10 h-10 rounded-full object-cover border-2 border-purple-500"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-purple-200 flex items-center justify-center border-2 border-purple-500">
-                        <span className="text-lg font-bold text-purple-600">
-                          {post.user?.firstName?.charAt(0) || "U"}
-                        </span>
-                      </div>
-                    )}
+                  <Link to={`/profile/${post.userId}`} className="flex items-center group">
+                    <div className="relative">
+                      <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full blur opacity-70 group-hover:opacity-100 transition duration-300"></div>
+                      {post.user?.profilePictureUrl ? (
+                        <img
+                          src={post.user.profilePictureUrl || "/placeholder.svg"}
+                          alt={`${post.user.firstName}'s profile`}
+                          className="relative w-10 h-10 rounded-full object-cover border-2 border-transparent z-10"
+                        />
+                      ) : (
+                        <div className="relative w-10 h-10 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 flex items-center justify-center z-10">
+                          <span className="text-lg font-bold text-white">{post.user?.firstName?.charAt(0) || "U"}</span>
+                        </div>
+                      )}
+                    </div>
                     <div className="ml-3">
-                      <p className="font-medium text-white">
+                      <p className="font-medium text-white group-hover:text-purple-300 transition-colors">
                         {post.user?.firstName} {post.user?.lastName}
-                      </p>
-                      <p className="text-xs text-purple-300">
-                        {new Date(post.createdAt).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
                       </p>
                     </div>
                   </Link>
@@ -142,7 +133,7 @@ const PostFeed = () => {
                     <div className="ml-auto">
                       <Link
                         to={`/edit-post/${post.id}`}
-                        className="text-purple-400 hover:text-purple-300 transition-colors"
+                        className="text-purple-400 hover:text-purple-300 transition-colors p-2 rounded-full hover:bg-purple-500/10"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -163,27 +154,15 @@ const PostFeed = () => {
                   )}
                 </div>
 
-                {/* Post Media */}
-                {post.mediaItems && post.mediaItems.length > 0 && (
-                  <div className={`grid grid-cols-${Math.min(post.mediaItems.length, 3)}`}>
-                    {post.mediaItems.map((media, index) => (
-                      <div key={index} className="aspect-square">
-                        <img
-                          src={media.mediaUrl || "/placeholder.svg"}
-                          alt={`Post media ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
+                {/* Post Media - Using the new ImageCarousel component */}
+                {post.mediaItems && post.mediaItems.length > 0 && <ImageCarousel mediaItems={post.mediaItems} />}
 
                 {/* Post Caption */}
-                <div className="p-4">
-                  <p className="text-white">{post.caption}</p>
+                <div className="p-5">
+                  <p className="text-white mb-4">{post.caption}</p>
 
                   {/* Like and Comment Actions */}
-                  <div className="mt-4 flex items-center space-x-4">
+                  <div className="flex items-center space-x-6">
                     <LikeButton
                       postId={post.id}
                       userId={currentUserId}
