@@ -6,6 +6,7 @@ import { api } from "../api"
 import toast from "react-hot-toast"
 import CommentSection from "../components/CommentSection"
 import LikeButton from "../components/LikeButton"
+import ImageCarousel from "../components/ImageCarousel"
 
 const EditPost = () => {
   const { id } = useParams()
@@ -201,7 +202,7 @@ const EditPost = () => {
             </div>
 
             {/* Current Images */}
-            {keepExistingMedia && previews.length > 0 && (
+            {keepExistingMedia && post.mediaItems && post.mediaItems.length > 0 && (
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <label className="block text-sm font-medium text-purple-200 ml-1">Current Images</label>
@@ -213,16 +214,8 @@ const EditPost = () => {
                     Replace Images
                   </button>
                 </div>
-                <div className="grid grid-cols-3 gap-4">
-                  {previews.map((preview, index) => (
-                    <div key={index} className="relative">
-                      <img
-                        src={preview || "/placeholder.svg"}
-                        alt={`Preview ${index + 1}`}
-                        className="h-40 w-full object-cover rounded-lg"
-                      />
-                    </div>
-                  ))}
+                <div className="max-w-md mx-auto">
+                  <ImageCarousel mediaItems={post.mediaItems} />
                 </div>
               </div>
             )}
@@ -271,16 +264,25 @@ const EditPost = () => {
 
                 {/* New Image Previews */}
                 {!keepExistingMedia && mediaFiles.length > 0 && (
-                  <div className="grid grid-cols-3 gap-4 mt-4">
-                    {mediaFiles.map((_, index) => (
-                      <div key={index} className="relative">
-                        <img
-                          src={URL.createObjectURL(mediaFiles[index]) || "/placeholder.svg"}
-                          alt={`New preview ${index + 1}`}
-                          className="h-40 w-full object-cover rounded-lg"
-                        />
+                  <div className="mt-4 max-w-md mx-auto">
+                    <div className="aspect-square bg-black">
+                      {mediaFiles.map((file, index) => (
+                        <div key={index} className={index === 0 ? "block" : "hidden"}>
+                          <img
+                            src={URL.createObjectURL(file) || "/placeholder.svg"}
+                            alt={`New preview ${index + 1}`}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    {mediaFiles.length > 1 && (
+                      <div className="flex justify-center mt-2 space-x-2">
+                        {mediaFiles.map((_, index) => (
+                          <div key={index} className="w-2 h-2 rounded-full bg-white/50" />
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
                 )}
 
