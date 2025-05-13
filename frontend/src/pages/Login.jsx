@@ -1,9 +1,16 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useNavigate, Link } from "react-router-dom"
+import { api } from "../api"
+import toast from "react-hot-toast"
 
 export default function Login() {
   const [loading, setLoading] = useState(true)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -11,6 +18,41 @@ export default function Login() {
     }, 1500)
     return () => clearTimeout(timer)
   }, [])
+
+  const handleEmailChange = (e) => setEmail(e.target.value)
+  const handlePasswordChange = (e) => setPassword(e.target.value)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    if (!email || !password) {
+      toast.error("Please enter both email and password")
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      // Call the login endpoint
+      const response = await api.post("/auth/login", {
+        email,
+        password,
+      })
+
+      // Store user data in localStorage
+      localStorage.setItem("userEmail", email)
+      localStorage.setItem("userId", response.data.id)
+      localStorage.setItem("userRole", response.data.userRole)
+
+      toast.success("Login successful!")
+      navigate("/profile")
+    } catch (error) {
+      console.error("Login error:", error)
+      toast.error(error.response?.data?.message || "Login failed. Please check your credentials.")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-black overflow-hidden">
@@ -127,7 +169,7 @@ export default function Login() {
               </div>
             </div>
 
-            <div className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-purple-200 mb-1 ml-1">
                   Email
@@ -152,6 +194,8 @@ export default function Login() {
                   <input
                     type="email"
                     id="email"
+                    value={email}
+                    onChange={handleEmailChange}
                     className="w-full pl-10 pr-4 py-3 bg-white/5 border border-purple-500/30 rounded-xl text-white placeholder-purple-200/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
                     placeholder="your@email.com"
                   />
@@ -186,6 +230,8 @@ export default function Login() {
                   <input
                     type="password"
                     id="password"
+                    value={password}
+                    onChange={handlePasswordChange}
                     className="w-full pl-10 pr-4 py-3 bg-white/5 border border-purple-500/30 rounded-xl text-white placeholder-purple-200/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
                     placeholder="••••••••"
                   />
@@ -204,19 +250,24 @@ export default function Login() {
               </div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(236,72,153,0.4)]"
+                disabled={isSubmitting}
+                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white ${
+                  isSubmitting
+                    ? "bg-purple-500/50 cursor-not-allowed"
+                    : "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(236,72,153,0.4)]"
+                }`}
               >
-                Sign in
+                {isSubmitting ? "Signing in..." : "Sign in"}
               </button>
-            </div>
+            </form>
           </div>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-purple-200/70">
               Don't have an account?{" "}
-              <a href="#" className="font-medium text-purple-400 hover:text-purple-300 transition-colors">
+              <Link to="/admin-signup" className="font-medium text-purple-400 hover:text-purple-300 transition-colors">
                 Sign up
-              </a>
+              </Link>
             </p>
           </div>
 
