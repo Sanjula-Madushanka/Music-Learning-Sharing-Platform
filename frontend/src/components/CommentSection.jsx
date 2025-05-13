@@ -64,8 +64,8 @@ const CommentSection = ({ postId }) => {
   }
 
   return (
-    <div className="mt-2 border-t border-purple-500/10 pt-3">
-      <h4 className="text-sm font-medium text-purple-200 mb-2">Comments ({comments.length})</h4>
+    <div className="mt-4 border-t border-purple-500/10 pt-4">
+      <h4 className="text-sm font-medium text-purple-300 mb-3">Comments ({comments.length})</h4>
 
       {/* Comment Form */}
       {currentUserId && <CommentForm postId={postId} userId={currentUserId} onCommentAdded={handleAddComment} />}
@@ -87,14 +87,14 @@ const CommentSection = ({ postId }) => {
       {comments.length > 3 && (
         <button
           onClick={() => setShowAllComments(!showAllComments)}
-          className="text-sm text-purple-400 hover:text-purple-300 mt-2 transition-colors"
+          className="text-sm text-purple-400 hover:text-purple-300 mt-3 transition-colors"
         >
           {showAllComments ? "Show less comments" : `Show all ${comments.length} comments`}
         </button>
       )}
 
       {comments.length === 0 && (
-        <p className="text-sm text-purple-200/50 italic">No comments yet. Be the first to comment!</p>
+        <p className="text-sm text-purple-300/50 italic mt-3">No comments yet. Be the first to comment!</p>
       )}
     </div>
   )
