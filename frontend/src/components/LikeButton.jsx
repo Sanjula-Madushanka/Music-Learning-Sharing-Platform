@@ -50,7 +50,7 @@ const LikeButton = ({ postId, userId, initialLikeCount, initialHasLiked, isOwner
     <button
       onClick={handleLikeToggle}
       disabled={isLoading || isOwner}
-      className={`flex items-center text-sm transition-colors ${
+      className={`flex items-center text-sm transition-all duration-300 ${
         isOwner
           ? "text-purple-400/50 cursor-not-allowed"
           : hasLiked
