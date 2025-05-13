@@ -14,23 +14,32 @@ import CompleteProfile from "./pages/CompleteProfile"
 import CreatePost from "./pages/CreatePost"
 import EditPost from "./pages/EditPost"
 import PostFeed from "./pages/PostFeed"
+import AdminSignup from "./pages/AdminSignup"
+import LearningPlanList from "./pages/LearningPlanList"
+import CreateLearningPlan from "./pages/CreateLearningPlan"
+import EditLearningPlan from "./pages/EditLearningPlan"
+import LearningPlanDetail from "./pages/LearningPlanDetail"
+import { Toaster } from "react-hot-toast"
+import MyLearningPlans from "./pages/MyLearningPlans"
 
 const AppWrapper = () => {
   const location = useLocation()
   const [showNavbar, setShowNavbar] = useState(false)
 
   useEffect(() => {
-    const hiddenRoutes = ["/login", "/register", "/oauth-redirect", "/complete-profile"]
+    const hiddenRoutes = ["/login", "/register", "/oauth-redirect", "/complete-profile", "/admin-signup"]
     setShowNavbar(!hiddenRoutes.includes(location.pathname))
   }, [location])
 
   return (
     <>
+      <Toaster position="top-right" />
       {showNavbar && <Navbar />}
       <Routes>
         <Route path="/" element={<UsersList />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/admin-signup" element={<AdminSignup />} />
         <Route path="/profile/:id" element={<Profile />} />
         <Route path="/edit/:id" element={<EditProfile />} />
         <Route path="/profile" element={<UserProfile />} />
@@ -39,6 +48,11 @@ const AppWrapper = () => {
         <Route path="/create-post" element={<CreatePost />} />
         <Route path="/edit-post/:id" element={<EditPost />} />
         <Route path="/feed" element={<PostFeed />} />
+        <Route path="/learning-plans" element={<LearningPlanList />} />
+        <Route path="/create-learning-plan" element={<CreateLearningPlan />} />
+        <Route path="/edit-learning-plan/:id" element={<EditLearningPlan />} />
+        <Route path="/learning-plan/:id" element={<LearningPlanDetail />} />
+        <Route path="/my-learning-plans" element={<MyLearningPlans />} />
       </Routes>
     </>
   )
