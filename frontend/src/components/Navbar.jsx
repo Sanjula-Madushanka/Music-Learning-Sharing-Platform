@@ -1,6 +1,6 @@
 "use client"
 
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useLocation } from "react-router-dom"
 import { useEffect, useState, useRef } from "react"
 import NotificationBadge from "./NotificationBadge"
 import NotificationList from "./NotificationList"
@@ -12,6 +12,7 @@ const Navbar = () => {
   const [showNotifications, setShowNotifications] = useState(false)
   const notificationsRef = useRef(null)
   const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
     // Check if OAuth or normal login was successful
@@ -75,10 +76,18 @@ const Navbar = () => {
         {isLoggedIn ? (
           <>
             {isLoggedIn && !isAdmin && (
-              <Link to="/my-learning-plans" className="hover:text-purple-400 transition-colors">
-                My Learning Plans
-              </Link>
+              <>
+                <Link to="/my-learning-plans" className="hover:text-purple-400 transition-colors">
+                  My Learning Plans
+                </Link>
+                <Link to="/my-progress-updates" className="hover:text-purple-400 transition-colors">
+                  My Progress
+                </Link>
+              </>
             )}
+            <Link to="/all-progress-updates" className="hover:text-purple-400 transition-colors">
+              All Progress
+            </Link>
             <Link to="/profile" className="hover:text-purple-400 transition-colors">
               Profile
             </Link>
