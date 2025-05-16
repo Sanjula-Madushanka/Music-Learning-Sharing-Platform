@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { getUserEnrollments, markLearningPlanAsCompleted, unenrollFromLearningPlan } from "../api"
+import { getMyEnrollments, markEnrollmentAsCompleted, unenrollFromLearningPlan } from "../api"
 import toast from "react-hot-toast"
 
 const MyLearningPlans = () => {
@@ -26,7 +26,7 @@ const MyLearningPlans = () => {
     try {
       setLoading(true)
       setError(null)
-      const data = await getUserEnrollments()
+      const data = await getMyEnrollments()
       console.log("Enrolled plans:", data)
       setEnrolledPlans(data)
     } catch (error) {
@@ -38,11 +38,18 @@ const MyLearningPlans = () => {
     }
   }
 
-  const handleMarkAsCompleted = async (learningPlanId) => {
+  const handleMarkAsCompleted = async (learningPlanId, learningPlanTitle) => {
     try {
-      await markLearningPlanAsCompleted(learningPlanId)
+      await markEnrollmentAsCompleted(learningPlanId)
       toast.success("Learning plan marked as completed!")
-      fetchEnrolledPlans() // Refresh the list
+
+      // Navigate to create progress update with learning plan info
+      navigate("/create-progress-update", {
+        state: {
+          learningPlanId: learningPlanId,
+          learningPlanTitle: learningPlanTitle,
+        },
+      })
     } catch (error) {
       console.error("Error marking learning plan as completed:", error)
       toast.error("Failed to mark learning plan as completed")
@@ -230,7 +237,7 @@ const MyLearningPlans = () => {
                       <div className="flex space-x-2">
                         {!enrollment.completed && (
                           <button
-                            onClick={() => handleMarkAsCompleted(plan.id)}
+                            onClick={() => handleMarkAsCompleted(plan.id, plan.title)}
                             className="flex-1 px-3 py-2 bg-gradient-to-r from-green-500 to-green-600 rounded-full text-white text-sm font-medium hover:from-green-600 hover:to-green-700 transition-all duration-300"
                           >
                             Mark as Completed

@@ -1,9 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Link } from "react-router-dom"
 import { api } from "../api"
 import toast from "react-hot-toast"
+import SearchBar from "../components/SearchBar"
+import FilterDropdown from "../components/FilterDropdown"
 
 const LearningPlanList = () => {
   const [learningPlans, setLearningPlans] = useState([])
@@ -11,6 +13,15 @@ const LearningPlanList = () => {
   const [isAdmin, setIsAdmin] = useState(false)
   const [userId, setUserId] = useState(null)
   const [error, setError] = useState(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filterOption, setFilterOption] = useState({ value: "newest", label: "Newest" })
+
+  const filterOptions = [
+    { value: "newest", label: "Newest" },
+    { value: "oldest", label: "Oldest" },
+    { value: "mostEnrolled", label: "Most Enrolled" },
+    { value: "alphabetical", label: "A-Z" },
+  ]
 
   useEffect(() => {
     const userRole = localStorage.getItem("userRole")
@@ -56,6 +67,43 @@ const LearningPlanList = () => {
       toast.error("Failed to delete learning plan")
     }
   }
+
+  const handleSearch = (term) => {
+    setSearchTerm(term)
+  }
+
+  const handleFilterChange = (option) => {
+    setFilterOption(option)
+  }
+
+  // Filter and sort learning plans based on search term and filter option
+  const filteredPlans = useMemo(() => {
+    // First filter by search term
+    let filtered = learningPlans
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      filtered = learningPlans.filter(
+        (plan) =>
+          plan.title?.toLowerCase().includes(term) ||
+          plan.description?.toLowerCase().includes(term) ||
+          plan.createdBy?.firstName?.toLowerCase().includes(term),
+      )
+    }
+
+    // Then sort based on filter option
+    switch (filterOption.value) {
+      case "newest":
+        return [...filtered].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      case "oldest":
+        return [...filtered].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+      case "mostEnrolled":
+        return [...filtered].sort((a, b) => b.enrollmentCount - a.enrollmentCount)
+      case "alphabetical":
+        return [...filtered].sort((a, b) => a.title.localeCompare(b.title))
+      default:
+        return filtered
+    }
+  }, [learningPlans, searchTerm, filterOption])
 
   if (loading) {
     return (
@@ -118,7 +166,7 @@ const LearningPlanList = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white">
       <div className="max-w-6xl mx-auto p-4 sm:p-6">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
             Learning Plans
           </h1>
@@ -132,7 +180,25 @@ const LearningPlanList = () => {
           )}
         </div>
 
-        {learningPlans.length === 0 ? (
+        {/* Search and Filter Section */}
+        <div className="mb-8 space-y-4">
+          <SearchBar
+            onSearch={handleSearch}
+            placeholder="Search by title, description or creator..."
+            className="w-full"
+          />
+
+          <div className="flex justify-end">
+            <FilterDropdown
+              options={filterOptions}
+              selectedOption={filterOption}
+              onSelect={handleFilterChange}
+              label="Sort by"
+            />
+          </div>
+        </div>
+
+        {filteredPlans.length === 0 ? (
           <div className="text-center py-12 bg-gray-800/30 backdrop-blur-sm rounded-3xl border border-purple-500/10 shadow-xl">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -148,18 +214,27 @@ const LearningPlanList = () => {
                 d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
               />
             </svg>
-            <h3 className="text-xl font-medium text-purple-200">No learning plans yet</h3>
-            {isAdmin ? (
-              <p className="text-purple-200/70 mt-2">
-                Create your first learning plan to help users improve their skills!
-              </p>
+            {searchTerm ? (
+              <>
+                <h3 className="text-xl font-medium text-purple-200">No matching learning plans found</h3>
+                <p className="text-purple-200/70 mt-2">Try a different search term or filter</p>
+              </>
             ) : (
-              <p className="text-purple-200/70 mt-2">Check back later for learning resources.</p>
+              <>
+                <h3 className="text-xl font-medium text-purple-200">No learning plans yet</h3>
+                {isAdmin ? (
+                  <p className="text-purple-200/70 mt-2">
+                    Create your first learning plan to help users improve their skills!
+                  </p>
+                ) : (
+                  <p className="text-purple-200/70 mt-2">Check back later for learning resources.</p>
+                )}
+              </>
             )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {learningPlans.map((plan) => (
+            {filteredPlans.map((plan) => (
               <div
                 key={plan.id}
                 className="bg-gray-800/30 backdrop-blur-sm rounded-3xl border border-purple-500/10 shadow-xl overflow-hidden transform transition-all duration-300 hover:shadow-purple-500/10 hover:border-purple-500/20 hover:-translate-y-1"
@@ -204,6 +279,25 @@ const LearningPlanList = () => {
                       </svg>
                     </div>
                   )}
+
+                  {/* Enrollment count badge */}
+                  <div className="absolute top-2 right-2 bg-purple-500/80 text-white text-xs font-medium px-2.5 py-1 rounded-full flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-3.5 w-3.5 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                      />
+                    </svg>
+                    {plan.enrollmentCount} {plan.enrollmentCount === 1 ? "student" : "students"}
+                  </div>
                 </div>
 
                 <div className="p-5">
